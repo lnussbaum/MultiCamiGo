@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MultiCamiGo 🚀</title>
+    
+    <!-- PWA Configuration for "App-like" feel on mobile -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f3e5f5">
+    
+    <!-- Inline SVG Favicon (No external assets needed) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+
+    <!-- Dependencies: Bootstrap 5 (UI) & Canvas Confetti (Effects) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* --- CSS Variables for Theming --- */
+        :root {
+            /* Light Mode Palette (Default) */
+            --bg-color: #e3f2fd; 
+            --container-bg: #ffffff;
+            --text-main: #8e44ad;
+            --text-sub: #6c757d;
+            --primary-purple: #9b59b6;
+            --soft-purple: #f5edfa;
+            --border-color: #f5edfa;
+            
+            /* Forced Purple Accents to override Bootstrap Blue */
+            --choice-text: #9b59b6;
+            --choice-border: #9b59b6;
+            --choice-hover-bg: #9b59b6;
+            --choice-hover-text: #fff;
+            
+            --error-red: #e74c3c;
+            --success-green: #27ae60;
+            --mistake-bg: #fff3cd;
+            --mistake-text: #664d03;
+            --mistake-border: #ffecb5;
+        }
+
+        /* Dark Mode Overrides */
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-main: #bb86fc;
+            --text-sub: #b0b3b8;
+            --primary-purple: #bb86fc;
+            --soft-purple: #333333;
+            --border-color: #333333;
+            --choice-text: #bb86fc;
+            --choice-border: #bb86fc;
+            --choice-hover-bg: #3700b3;
+            --choice-hover-text: #fff;
+            --mistake-bg: #3c3015;
+            --mistake-text: #ffda6a;
+            --mistake-border: #52421f;
+        }
+
+        /* --- Global Styles --- */
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent; /* Remove tap delay on mobile */
+        }
+
+        .app-container {
+            background: var(--container-bg);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            margin: 1rem;
+            position: relative;
+            border: 3px solid var(--border-color);
+            overflow: hidden;
+            transition: background 0.3s, border 0.3s;
+        }
+
+        h2, h1, h5 {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: var(--text-sub) !important;
+        }
+        
+        /* --- Bootstrap Overrides for Purple Theme --- */
+        
+        /* Checkboxes & Radios */
+        .form-check-input:checked {
+            background-color: var(--primary-purple);
+            border-color: var(--primary-purple);
+        }
+
+        .form-check-input:focus {
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.25);
+        }
+
+        /* Sliders / Ranges */
+        .form-range::-webkit-slider-thumb {
+            background-color: var(--primary-purple);
+        }
+
+        .form-range::-webkit-slider-thumb:active {
+            background-color: var(--text-main);
+        }
+
+        .form-range::-moz-range-thumb {
+            background-color: var(--primary-purple);
+        }
+
+        .form-range:focus::-webkit-slider-thumb {
+            box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba(155, 89, 182, 0.25);
+        }
+
+        /* Inputs & Selects Focus Ring */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-purple);
+            box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.25);
+        }
+        
+        /* Buttons */
+        .btn-outline-primary { 
+            color: var(--choice-text); 
+            border-color: var(--choice-border); 
+        }
+
+        .btn-outline-primary:hover, 
+        .btn-outline-primary:active, 
+        .btn-outline-primary:focus,
+        .btn-check:checked + .btn-outline-primary {
+            background-color: var(--choice-hover-bg) !important;
+            border-color: var(--choice-border) !important;
+            color: var(--choice-hover-text) !important;
+            box-shadow: 0 0 0 0.25rem rgba(155, 89, 182, 0.25) !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-purple);
+            border-color: var(--primary-purple);
+            box-shadow: 0 4px 0px rgba(0,0,0,0.2);
+            transition: all 0.1s;
+        }
+
+        .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
+            background-color: var(--text-main) !important;
+            border-color: var(--text-main) !important;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.2), 0 0 0 0.25rem rgba(155, 89, 182, 0.25) !important;
+        }
+
+        /* Menu button harmony */
+        .btn-outline-secondary {
+            color: var(--text-sub);
+            border-color: var(--text-sub);
+        }
+
+        .btn-outline-secondary:hover, .btn-outline-secondary:active, .btn-outline-secondary:focus {
+            background-color: var(--text-sub) !important;
+            border-color: var(--text-sub) !important;
+            color: #fff !important;
+            box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.25) !important;
+        }
+        
+        /* --- Game Specific Components --- */
+        .question-display {
+            font-size: 3.5rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 1rem 0;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+            transition: color 0.2s;
+        }
+
+        .timer-fill {
+            background-color: var(--primary-purple);
+        }
+
+        .stat-value {
+            color: var(--text-main);
+        }
+        
+        .choice-btn {
+            font-size: 1.6rem;
+            border-radius: 15px;
+            border-width: 2px;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 5px !important;
+            touch-action: manipulation;
+        }
+        
+        .progress-badge, .mode-badge {
+            font-size: 1.2rem !important;
+            padding: 10px 20px !important;
+        }
+
+        .progress-badge {
+            background-color: var(--container-bg) !important;
+            color: var(--text-main) !important;
+            border: 2px solid var(--soft-purple) !important;
+        }
+
+        .mode-badge {
+            background-color: var(--primary-purple) !important;
+            color: white !important;
+        }
+        
+        /* Screen Visibility Management */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Feedback Area (Bravo/Oops) */
+        .feedback {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-text {
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        .feedback-emoji {
+            font-size: 3.5rem;
+            line-height: 1;
+        }
+
+        /* Layout Stability to prevent UI jumps */
+        #interactionZone {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        #buttonsArea {
+            display: grid;
+            gap: 10px;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        #keyboardArea {
+            transition: opacity 0.2s;
+        }
+        
+        #nextButtonArea {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        #nextButtonArea.active {
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        .invisible-layout {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Mistake List */
+        .mistake-item {
+            background-color: var(--mistake-bg);
+            border: 1px solid var(--mistake-border);
+            color: var(--mistake-text);
+            border-radius: 10px;
+            padding: 8px 15px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        /* Top Controls (Theme/Lang) */
+        .top-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .control-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-sub);
+            transition: transform 0.2s;
+        }
+
+        .control-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .bg-light {
+            background-color: var(--soft-purple) !important;
+        }
+        
+        .record-display {
+            font-size: 0.9rem;
+            color: var(--primary-purple);
+            font-weight: 600;
+            background: var(--soft-purple);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container text-center">
+    <div class="top-controls">
+        <div class="control-icon" onclick="toggleLang()" id="langIcon">🇬🇧</div>
+        <div class="control-icon" onclick="toggleTheme()">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+        </div>
+    </div>
+
+    <!-- CONFIGURATION SCREEN -->
+    <div id="configScreen" class="screen active">
+        <h1 class="mb-1"><i class="bi bi-stars text-warning"></i> MultiCamiGo</h1>
+        <p class="text-muted mb-3 small" data-i18n="subtitle">Apprends en t'amusant !</p>
+        
+        <!-- Table Selection -->
+        <div class="mb-3">
+            <label class="form-label fw-bold"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> <span data-i18n="pickTables">Choisis les tables :</span></label>
+            <div class="d-flex flex-wrap justify-content-center" id="tablesContainer">
+                <!-- Injected via JS -->
+            </div>
+            <div class="mt-1">
+                <button class="btn btn-sm btn-link text-decoration-none text-purple" style="color:var(--primary-purple)" onclick="toggleAllTables(true)">
+                    <i class="bi bi-check-all"></i> <span data-i18n="all">Toutes</span>
+                </button>
+                <button class="btn btn-sm btn-link text-decoration-none text-muted" onclick="toggleAllTables(false)">
+                    <i class="bi bi-x-circle"></i> <span data-i18n="none">Aucune</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Method Selection -->
+        <div class="mb-3">
+            <label class="form-label fw-bold"><i class="bi bi-controller text-success"></i> <span data-i18n="howToAnswer">Comment répondre ?</span></label>
+            <div class="d-flex gap-3 justify-content-center mb-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputMode" id="inputButtons" value="buttons" checked onchange="updateConfigUI()">
+                    <label class="form-check-label" for="inputButtons">
+                        <i class="bi bi-ui-checks-grid"></i> <span data-i18n="buttons">Boutons</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="inputMode" id="inputKeyboard" value="keyboard" onchange="updateConfigUI()">
+                    <label class="form-check-label" for="inputKeyboard">
+                        <i class="bi bi-keyboard"></i> <span data-i18n="keyboard">Clavier</span>
+                    </label>
+                </div>
+            </div>
+            <div id="buttonsCountConfig" class="bg-light p-2 rounded mb-2">
+                <label class="form-label small"><span data-i18n="btnCount">Nombre de boutons :</span> <span id="choiceCountVal" class="fw-bold">4</span></label>
+                <input type="range" class="form-range" min="3" max="8" value="4" id="choiceCountRange" oninput="updateConfigUI()">
+            </div>
+        </div>
+
+        <!-- Question Formats -->
+        <div class="mb-3">
+            <label class="form-label fw-bold small"><i class="bi bi-puzzle-fill text-danger"></i> <span data-i18n="formats">Formats :</span></label>
+            <div class="d-flex flex-wrap justify-content-center gap-3 small">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="fmtStandard" checked onchange="updateConfigUI()">
+                    <label class="form-check-label" for="fmtStandard">2 x 3 = ?</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="fmtStandardReverse" checked onchange="updateConfigUI()">
+                    <label class="form-check-label" for="fmtStandardReverse">3 x 2 = ?</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="fmtMissingRight" onchange="updateConfigUI()">
+                    <label class="form-check-label" for="fmtMissingRight">2 x ? = 6</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="fmtMissingLeft" onchange="updateConfigUI()">
+                    <label class="form-check-label" for="fmtMissingLeft">? x 3 = 6</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Mode & Difficulty -->
+        <div class="row g-2 mb-3">
+            <div class="col-6 text-start">
+                <label class="form-label fw-bold small"><i class="bi bi-trophy-fill text-warning"></i> <span data-i18n="mode">Mode :</span></label>
+                <select class="form-select" id="modeSelect" onchange="updateConfigUI()">
+                    <option value="fixed" data-i18n="modeFixed">Série de questions</option>
+                    <option value="streak" data-i18n="modeStreak">Suite gagnante</option>
+                    <option value="sprint" data-i18n="modeSprint">Sprint</option>
+                </select>
+            </div>
+            <div class="col-6 text-start">
+                <div id="targetConfigDiv">
+                    <label class="form-label fw-bold small" id="targetLabel" data-i18n="count">Nombre :</label>
+                    <input type="number" class="form-control" id="targetValue" value="20" onchange="updateConfigUI()">
+                </div>
+                <div id="sprintConfigDiv" class="d-none">
+                    <label class="form-label fw-bold small" data-i18n="duration">Durée :</label>
+                    <select class="form-select" id="sprintDuration" onchange="updateConfigUI()">
+                        <option value="60" selected data-i18n="min1">1 minute</option>
+                        <option value="120" data-i18n="min2">2 minutes</option>
+                        <option value="180" data-i18n="min3">3 minutes</option>
+                        <option value="300" data-i18n="min5">5 minutes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4" id="timeConfigDiv">
+            <label class="form-label fw-bold small"><i class="bi bi-stopwatch-fill text-info"></i> <span data-i18n="timer">Chrono (par question) :</span></label>
+            <select class="form-select" id="timeLimit" onchange="updateConfigUI()">
+                <option value="0" data-i18n="unlimited">Illimité</option>
+                <option value="5" data-i18n="expert">5s (Expert ⚡)</option>
+                <option value="10" selected data-i18n="normal">10s (Normal)</option>
+                <option value="20" data-i18n="chill">20s (Tranquille 🐢)</option>
+            </select>
+        </div>
+
+        <div class="form-check form-switch d-flex justify-content-center mb-3">
+            <input class="form-check-input me-2" type="checkbox" id="soundToggle" checked onchange="updateConfigUI()">
+            <label class="form-check-label" for="soundToggle"><span data-i18n="sound">Sons activés</span> 🔊</label>
+        </div>
+
+        <div id="bestScoreDisplay" class="record-display d-none">
+            <i class="bi bi-award-fill"></i> <span data-i18n="record">Record :</span> <span id="recordValue">-</span>
+        </div>
+
+        <div class="mt-4">
+            <button class="btn btn-primary w-100 py-3 fw-bold text-white shadow-sm" onclick="startGame()">
+                <i class="bi bi-play-circle-fill"></i> <span data-i18n="start">COMMENCER</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="gameScreen" class="screen">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="stopGame()">
+                <i class="bi bi-x-lg"></i> <span data-i18n="menu">Menu</span>
+            </button>
+            <span class="badge rounded-pill mode-badge" id="modeBadge">Série</span>
+        </div>
+
+        <div class="text-center mb-2">
+            <span class="badge rounded-pill progress-badge" id="progressBadge">1 / 20</span>
+        </div>
+        
+        <div class="progress mb-4" style="height: 12px; background-color: var(--soft-purple); border-radius: 10px;">
+            <div id="timerFill" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%;"></div>
+        </div>
+
+        <div id="gameFeedback" class="feedback"></div>
+
+        <div class="question-display" id="questionText">2 x 2 = ?</div>
+
+        <!-- Stable Interaction Zone -->
+        <div id="interactionZone">
+            <div id="keyboardArea" class="row g-2 justify-content-center d-none">
+                <div class="col-6">
+                    <input type="number" id="answerInput" class="form-control form-control-lg text-center" placeholder="?" inputmode="numeric" style="font-size: 2rem;">
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary btn-lg" onclick="submitAnswer()">
+                        <i class="bi bi-arrow-return-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="buttonsArea" class=""></div>
+
+            <div id="nextButtonArea">
+                <button id="btnNext" class="btn btn-primary btn-lg px-5 py-3 shadow-sm fw-bold" style="font-size: 1.4rem;" onclick="nextQuestion()">
+                    <span data-i18n="next">Suivant</span> <i class="bi bi-arrow-right-circle-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="resultScreen" class="screen">
+        <h2 class="mb-4" id="resultTitle" style="font-size: 2.5rem;">Fini ! 🎊</h2>
+        
+        <div id="newRecordMsg" class="alert alert-success d-none fw-bold mb-4">
+            <i class="bi bi-trophy-fill"></i> <span data-i18n="newRecord">NOUVEAU RECORD !</span>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <div class="p-3 bg-light rounded-4">
+                    <small class="text-muted"><i class="bi bi-bullseye"></i> <span data-i18n="score">Score</span></small>
+                    <div class="h3 mb-0 stat-value" id="scoreValue">18/20</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-3 bg-light rounded-4">
+                    <small class="text-muted"><i class="bi bi-lightning-charge"></i> <span data-i18n="speed">Vitesse</span></small>
+                    <div class="h3 mb-0 stat-value" id="timeValue">3.5s</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mistakesArea" class="mb-4 d-none">
+            <h5 class="text-danger mb-2"><i class="bi bi-exclamation-triangle"></i> <span data-i18n="mistakes">À revoir :</span></h5>
+            <div id="mistakesList"></div>
+        </div>
+
+        <button class="btn btn-primary w-100 py-3 fw-bold text-white mb-2" onclick="showConfig()">
+            <i class="bi bi-arrow-repeat"></i> <span data-i18n="replay">REJOUER</span>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // --- Translations (English & French) ---
+    const translations = {
+        fr: {
+            subtitle: "Apprends en t'amusant !",
+            pickTables: "Choisis les tables :",
+            all: "Toutes",
+            none: "Aucune",
+            howToAnswer: "Comment répondre ?",
+            buttons: "Boutons",
+            keyboard: "Clavier",
+            btnCount: "Nombre de boutons :",
+            formats: "Formats :",
+            mode: "Mode :",
+            modeFixed: "Série",
+            modeStreak: "Suite",
+            modeSprint: "Sprint",
+            count: "Nombre :",
+            duration: "Durée :",
+            timer: "Chrono (par question) :",
+            sound: "Sons activés",
+            record: "Record :",
+            start: "COMMENCER",
+            menu: "Menu",
+            next: "Suivant",
+            newRecord: "NOUVEAU RECORD !",
+            score: "Score",
+            speed: "Vitesse",
+            mistakes: "À revoir :",
+            replay: "REJOUER",
+            min1: "1 minute",
+            min2: "2 minutes",
+            min3: "3 minutes",
+            min5: "5 minutes",
+            unlimited: "Illimité",
+            expert: "5s (Expert ⚡)",
+            normal: "10s (Normal)",
+            chill: "20s (Tranquille 🐢)",
+            bravo: "Bravo !",
+            oops: "Oups !",
+            timesUp: "Temps écoulé !",
+            finished: "Fini ! 🎊",
+            champion: "Champion ! 🏆🥇",
+            wellDone: "Bien joué ! 🎉",
+            timeAttackEnd: "Temps écoulé ! ⚡",
+            pts: "pts",
+            streak: "suite"
+        },
+        en: {
+            subtitle: "Learn while having fun!",
+            pickTables: "Pick tables:",
+            all: "All",
+            none: "None",
+            howToAnswer: "Input method?",
+            buttons: "Buttons",
+            keyboard: "Keyboard",
+            btnCount: "Button count:",
+            formats: "Formats:",
+            mode: "Mode:",
+            modeFixed: "Series",
+            modeStreak: "Streak",
+            modeSprint: "Sprint",
+            count: "Count:",
+            duration: "Duration:",
+            timer: "Timer (per question):",
+            sound: "Sound On",
+            record: "Record:",
+            start: "START",
+            menu: "Menu",
+            next: "Next",
+            newRecord: "NEW RECORD!",
+            score: "Score",
+            speed: "Speed",
+            mistakes: "Review:",
+            replay: "PLAY AGAIN",
+            min1: "1 minute",
+            min2: "2 minutes",
+            min3: "3 minutes",
+            min5: "5 minutes",
+            unlimited: "Unlimited",
+            expert: "5s (Expert ⚡)",
+            normal: "10s (Normal)",
+            chill: "20s (Chill 🐢)",
+            bravo: "Great!",
+            oops: "Oops!",
+            timesUp: "Time's up!",
+            finished: "Finished! 🎊",
+            champion: "Champion! 🏆🥇",
+            wellDone: "Well done! 🎉",
+            timeAttackEnd: "Time's up! ⚡",
+            pts: "pts",
+            streak: "streak"
+        }
+    };
+
+    let currentLang = 'fr';
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.documentElement.lang = lang;
+        const icon = document.getElementById('langIcon');
+        icon.innerText = (lang === 'fr' ? '🇬🇧' : '🇫🇷');
+        
+        // Update Static Text Elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translation = translations[lang][key];
+            if (translation) {
+                el.innerText = translation;
+            }
+        });
+        
+        updateConfigUI();
+    }
+
+    function toggleLang() {
+        const next = (currentLang === 'fr' ? 'en' : 'fr');
+        setLanguage(next);
+    }
+
+    // --- Persistence & Records ---
+    const STORAGE_CONFIG = 'mm_config_v1';
+    const STORAGE_RECORDS = 'mm_records_v1';
+
+    function loadConfig() {
+        const saved = localStorage.getItem(STORAGE_CONFIG);
+        if (saved) {
+            try {
+                const c = JSON.parse(saved);
+                // Apply language first
+                if (c.lang) {
+                    setLanguage(c.lang);
+                }
+                // Apply tables
+                for (let i = 1; i <= 13; i++) {
+                    const el = document.getElementById(`tbl${i}`);
+                    if (el) {
+                        el.checked = c.tables.includes(i);
+                    }
+                }
+                // Apply Formats
+                if (c.formats) {
+                    const formatIds = [
+                        'fmtStandard',
+                        'fmtStandardReverse',
+                        'fmtMissingRight',
+                        'fmtMissingLeft'
+                    ];
+                    formatIds.forEach(id => {
+                        const key = id.replace('fmt', '').toLowerCase();
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.checked = c.formats.includes(key);
+                        }
+                    });
+                }
+                // Apply Settings
+                if (c.mode) {
+                    document.getElementById('modeSelect').value = c.mode;
+                }
+                if (c.inputType) {
+                    const inputId = (c.inputType === 'buttons' ? 'inputButtons' : 'inputKeyboard');
+                    document.getElementById(inputId).checked = true;
+                }
+                if (c.choiceCount) {
+                    document.getElementById('choiceCountRange').value = c.choiceCount;
+                }
+                if (c.target) {
+                    document.getElementById('targetValue').value = c.target;
+                }
+                if (c.timeLimit !== undefined) {
+                    document.getElementById('timeLimit').value = c.timeLimit;
+                }
+                if (c.sprintDuration) {
+                    document.getElementById('sprintDuration').value = c.sprintDuration;
+                }
+                if (c.sound !== undefined) {
+                    document.getElementById('soundToggle').checked = c.sound;
+                }
+            } catch (e) {
+                console.error("Config load error", e);
+            }
+        }
+        updateConfigUI();
+    }
+
+    function saveConfig() {
+        const tables = Array.from({ length: 13 }, (_, i) => i + 1)
+            .filter(i => document.getElementById(`tbl${i}`).checked);
+        
+        const formatIds = [
+            'fmtStandard',
+            'fmtStandardReverse',
+            'fmtMissingRight',
+            'fmtMissingLeft'
+        ];
+        const formats = formatIds
+            .filter(id => document.getElementById(id).checked)
+            .map(id => id.replace('fmt', '').toLowerCase());
+        
+        const configData = {
+            tables: tables,
+            formats: formats,
+            mode: document.getElementById('modeSelect').value,
+            inputType: document.getElementById('inputButtons').checked ? 'buttons' : 'keyboard',
+            choiceCount: parseInt(document.getElementById('choiceCountRange').value),
+            target: parseInt(document.getElementById('targetValue').value),
+            timeLimit: parseInt(document.getElementById('timeLimit').value),
+            sprintDuration: parseInt(document.getElementById('sprintDuration').value),
+            sound: document.getElementById('soundToggle').checked,
+            lang: currentLang
+        };
+        localStorage.setItem(STORAGE_CONFIG, JSON.stringify(configData));
+        return configData;
+    }
+
+    function getRecordHash(c) {
+        return JSON.stringify({
+            t: c.tables.slice().sort(),
+            m: c.mode,
+            v: c.mode === 'sprint' ? c.sprintDuration : c.target,
+            i: c.inputType,
+            tl: c.timeLimit,
+            fmt: c.formats.slice().sort()
+        });
+    }
+
+    function updateConfigUI() {
+        const mode = document.getElementById('modeSelect').value;
+        const targetDiv = document.getElementById('targetConfigDiv');
+        const sprintDiv = document.getElementById('sprintConfigDiv');
+        const timeDiv = document.getElementById('timeConfigDiv');
+        const btnsConfig = document.getElementById('buttonsCountConfig');
+        const t = translations[currentLang];
+        
+        sprintDiv.classList.add('d-none');
+        targetDiv.classList.add('d-none');
+        timeDiv.style.display = 'block';
+
+        if (mode === 'fixed' || mode === 'streak') {
+            targetDiv.classList.remove('d-none');
+            const targetLabel = document.getElementById('targetLabel');
+            targetLabel.innerText = (mode === 'fixed' ? t.count : t.targetStreak);
+        } else if (mode === 'sprint') {
+            sprintDiv.classList.remove('d-none');
+            timeDiv.style.display = 'none';
+        }
+
+        const isButtons = document.getElementById('inputButtons').checked;
+        btnsConfig.classList.toggle('d-none', !isButtons);
+        
+        const choiceCount = document.getElementById('choiceCountRange').value;
+        document.getElementById('choiceCountVal').innerText = choiceCount;
+
+        const currentConfig = saveConfig();
+        const hash = getRecordHash(currentConfig);
+        const allRecords = JSON.parse(localStorage.getItem(STORAGE_RECORDS) || '{}');
+        const record = allRecords[hash];
+        
+        const recordDisplay = document.getElementById('bestScoreDisplay');
+        const recordVal = document.getElementById('recordValue');
+        
+        if (record) {
+            recordDisplay.classList.remove('d-none');
+            if (mode === 'sprint') {
+                recordVal.innerText = `${record.score} ${t.pts}`;
+            } else if (mode === 'fixed') {
+                recordVal.innerText = `${record.time}s`;
+            } else {
+                recordVal.innerText = `${record.score} ${t.streak}`;
+            }
+        } else {
+            recordDisplay.classList.add('d-none');
+        }
+    }
+
+    // --- Theme Logic ---
+    function toggleTheme() {
+        const body = document.body;
+        const icon = document.getElementById('themeIcon');
+        const isDark = (body.getAttribute('data-theme') === 'dark');
+        
+        if (isDark) {
+            body.setAttribute('data-theme', 'light');
+            icon.className = 'bi bi-moon-stars-fill';
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#e3f2fd');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            icon.className = 'bi bi-sun-fill';
+            document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1a1a2e');
+        }
+    }
+
+    // --- Audio System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const Sound = {
+        playTone: (freq, type, duration) => {
+            const soundEnabled = document.getElementById('soundToggle').checked;
+            if (!soundEnabled) {
+                return;
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        },
+        correct: () => {
+            Sound.playTone(600, 'sine', 0.1);
+            setTimeout(() => {
+                Sound.playTone(800, 'sine', 0.2);
+            }, 100);
+        },
+        wrong: () => {
+            Sound.playTone(150, 'sawtooth', 0.3);
+        },
+        win: () => {
+            const frequencies = [440, 554, 659, 880];
+            frequencies.forEach((freq, index) => {
+                setTimeout(() => {
+                    Sound.playTone(freq, 'square', 0.2);
+                }, index * 100);
+            });
+        }
+    };
+
+    // --- Game Logic ---
+    let config = {};
+    let gameState = {};
+    const successEmojis = [
+        '🦄', '🦖', '🍦', '🌈', '🐱', '🚀', '🌟', '🍭', '🦁', '🐶', '🍕', '🎨', '🛸', '🐳', '🍀',
+        '🦋', '🐼', '🍩', '🎸', '⚽', '🏀', '🍄', '🐢', '🐬', '🦜', '🎲', '🧩', '🧁', '🍟', '🎡'
+    ];
+
+    window.onload = () => {
+        const container = document.getElementById('tablesContainer');
+        for (let i = 1; i <= 13; i++) {
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'btn-check';
+            input.id = `tbl${i}`;
+            input.value = i;
+            input.onclick = updateConfigUI;
+            
+            const label = document.createElement('label');
+            label.className = 'btn btn-outline-primary m-1 rounded-circle';
+            label.style.width = '45px';
+            label.style.height = '45px';
+            label.style.display = 'inline-flex';
+            label.style.alignItems = 'center';
+            label.style.justifyContent = 'center';
+            label.style.fontWeight = 'bold';
+            label.htmlFor = `tbl${i}`;
+            label.innerText = i;
+            
+            container.appendChild(input);
+            container.appendChild(label);
+        }
+        
+        document.getElementById('answerInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                submitAnswer();
+            }
+        });
+        
+        loadConfig();
+    };
+
+    function toggleAllTables(state) { 
+        for (let i = 1; i <= 13; i++) {
+            document.getElementById(`tbl${i}`).checked = state;
+        }
+        updateConfigUI();
+    }
+
+    function stopGame() {
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+        }
+        if (gameState.sprintInterval) {
+            clearInterval(gameState.sprintInterval);
+        }
+        showConfig();
+    }
+
+    function startGame() {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        
+        config = saveConfig();
+        if (config.tables.length === 0) {
+            const msg = (currentLang === 'fr' ? "Choisis au moins une table !" : "Pick at least one table!");
+            return alert(msg);
+        }
+        if (config.formats.length === 0) {
+            const msg = (currentLang === 'fr' ? "Choisis au moins un format !" : "Pick at least one format!");
+            return alert(msg);
+        }
+
+        gameState = { 
+            score: 0,
+            count: 0,
+            totalT: 0,
+            correctC: 0,
+            retryQueue: [],
+            mistakes: [],
+            sprintInterval: null,
+            sprintTimeLeft: config.sprintDuration
+        };
+        
+        const badge = document.getElementById('modeBadge');
+        const t = translations[currentLang];
+        if (config.mode === 'fixed') {
+            badge.innerText = t.modeFixed;
+        } else if (config.mode === 'streak') {
+            badge.innerText = t.modeStreak;
+        } else if (config.mode === 'sprint') {
+            badge.innerText = '⚡ ' + t.modeSprint;
+        }
+
+        showScreen('gameScreen');
+        if (config.mode === 'sprint') {
+            startSprintTimer();
+        }
+        nextQuestion();
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => {
+            s.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startSprintTimer() {
+        const bar = document.getElementById('timerFill');
+        bar.style.width = '100%';
+        bar.style.backgroundColor = 'var(--primary-purple)';
+        
+        gameState.sprintInterval = setInterval(() => {
+            gameState.sprintTimeLeft--;
+            const percent = (gameState.sprintTimeLeft / config.sprintDuration) * 100;
+            bar.style.width = `${percent}%`;
+            
+            if (gameState.sprintTimeLeft <= 10) {
+                bar.style.backgroundColor = 'var(--error-red)';
+            }
+            
+            if (gameState.sprintTimeLeft <= 0) {
+                clearInterval(gameState.sprintInterval);
+                finishGame();
+            }
+        }, 1000);
+    }
+
+    function generateQuestionData() {
+        if (gameState.retryQueue.length > 0) {
+            const index = Math.floor(Math.random() * gameState.retryQueue.length);
+            return gameState.retryQueue.splice(index, 1)[0];
+        }
+        
+        const tables = config.tables;
+        const table = tables[Math.floor(Math.random() * tables.length)];
+        const multiplier = Math.floor(Math.random() * 10) + 1; 
+        const result = table * multiplier;
+        
+        const formats = config.formats;
+        const format = formats[Math.floor(Math.random() * formats.length)];
+        
+        let questionText = "";
+        let answer = 0;
+        let fullEquation = "";
+        
+        if (format === 'standard') {
+            questionText = `${table} x ${multiplier} = ?`;
+            answer = result;
+            fullEquation = `${table} x ${multiplier} = ${result}`;
+        } else if (format === 'standardreverse') {
+            questionText = `${multiplier} x ${table} = ?`;
+            answer = result;
+            fullEquation = `${multiplier} x ${table} = ${result}`;
+        } else if (format === 'missingright') {
+            questionText = `${table} x ? = ${result}`;
+            answer = multiplier;
+            fullEquation = `${table} x ${multiplier} = ${result}`;
+        } else if (format === 'missingleft') {
+            questionText = `? x ${multiplier} = ${result}`;
+            answer = table;
+            fullEquation = `${table} x ${multiplier} = ${result}`;
+        }
+        
+        return {
+            table: table,
+            multiplier: multiplier,
+            result: result,
+            format: format,
+            q: questionText,
+            ans: answer,
+            full: fullEquation
+        };
+    }
+
+    function nextQuestion() {
+        if (config.mode === 'fixed' && gameState.score >= config.target) {
+            return finishGame();
+        }
+        if (config.mode === 'streak' && gameState.count >= config.target) {
+            return finishGame();
+        }
+        if (config.mode === 'sprint' && gameState.sprintTimeLeft <= 0) {
+            return;
+        }
+
+        const nextArea = document.getElementById('nextButtonArea');
+        nextArea.classList.remove('active');
+
+        document.getElementById('keyboardArea').classList.toggle('d-none', config.inputType === 'buttons');
+        document.getElementById('keyboardArea').classList.remove('invisible-layout');
+        
+        const btnArea = document.getElementById('buttonsArea');
+        btnArea.classList.toggle('d-none', config.inputType === 'keyboard');
+        btnArea.classList.remove('invisible-layout');
+
+        const badge = document.getElementById('progressBadge');
+        const t = translations[currentLang];
+        if (config.mode === 'fixed') {
+            badge.innerText = `${gameState.score + 1} / ${config.target}`;
+        } else if (config.mode === 'streak') {
+            badge.innerText = `${t.streak} : ${gameState.count} / ${config.target}`;
+        } else if (config.mode === 'sprint') {
+            badge.innerText = `${t.score} : ${gameState.score}`;
+        }
+        
+        gameState.cur = generateQuestionData();
+        const qEl = document.getElementById('questionText');
+        qEl.innerText = gameState.cur.q;
+        qEl.style.color = 'var(--text-main)';
+        
+        document.getElementById('gameFeedback').innerHTML = '';
+        
+        if (config.inputType === 'keyboard') {
+            document.getElementById('answerInput').value = '';
+            setTimeout(() => {
+                document.getElementById('answerInput').focus();
+            }, 50);
+        } else {
+            let cols = config.choiceCount;
+            if (config.choiceCount > 5) {
+                cols = Math.ceil(config.choiceCount / 2);
+            }
+            
+            btnArea.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            btnArea.innerHTML = '';
+            
+            const offset = Math.floor(Math.random() * config.choiceCount);
+            const startValue = Math.max(0, gameState.cur.ans - offset);
+            
+            for (let i = 0; i < config.choiceCount; i++) {
+                const val = startValue + i;
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline-primary choice-btn';
+                btn.innerText = val;
+                btn.onclick = () => {
+                    submitAnswer(val);
+                };
+                btnArea.appendChild(btn);
+            }
+        }
+        
+        gameState.start = Date.now();
+        if (config.mode !== 'sprint') {
+            startTimer();
+        }
+    }
+
+    function startTimer() {
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+        }
+        
+        const bar = document.getElementById('timerFill');
+        if (!config.timeLimit) {
+            bar.style.width = '100%';
+            return;
+        }
+        
+        const limitMs = config.timeLimit * 1000;
+        const startTime = Date.now();
+        
+        gameState.timer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const remaining = limitMs - elapsed;
+            const percent = (remaining / limitMs) * 100;
+            
+            bar.style.width = `${percent}%`;
+            
+            if (remaining <= 10000) {
+                bar.style.backgroundColor = 'var(--error-red)';
+            } else {
+                bar.style.backgroundColor = 'var(--primary-purple)';
+            }
+            
+            if (remaining <= 0) {
+                clearInterval(gameState.timer);
+                submitAnswer(-1);
+            }
+        }, 50);
+    }
+
+    function submitAnswer(val = null) {
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+        }
+        
+        const inputVal = (val !== null ? val : parseInt(document.getElementById('answerInput').value));
+        if (isNaN(inputVal) && val === null) {
+            return;
+        }
+        
+        const timeTaken = (Date.now() - gameState.start) / 1000;
+        const isCorrect = (inputVal === gameState.cur.ans);
+        const feedbackEl = document.getElementById('gameFeedback');
+        const questionEl = document.getElementById('questionText');
+        const t = translations[currentLang];
+        
+        if (isCorrect) {
+            Sound.correct();
+            const emoji = successEmojis[Math.floor(Math.random() * successEmojis.length)];
+            feedbackEl.innerHTML = `<div class="feedback-text text-success">${t.bravo}</div><div class="feedback-emoji">${emoji}</div>`;
+            questionEl.innerText = gameState.cur.full;
+            questionEl.style.color = "var(--success-green)";
+            
+            gameState.score++;
+            gameState.count++;
+            gameState.totalT += timeTaken;
+            gameState.correctC++;
+            
+            setTimeout(nextQuestion, 1000);
+        } else {
+            Sound.wrong();
+            const isTimeout = (val === -1);
+            const msg = (isTimeout ? t.timesUp : t.oops);
+            const icon = (isTimeout ? '<i class="bi bi-alarm"></i>' : '<i class="bi bi-lightbulb"></i>');
+            
+            feedbackEl.innerHTML = `<div class="feedback-text text-danger">${msg}</div><div class="feedback-emoji text-danger">${icon}</div>`;
+            questionEl.innerText = gameState.cur.full;
+            questionEl.style.color = "var(--error-red)";
+            
+            gameState.count = 0; 
+            const mistakeText = gameState.cur.full;
+            if (!gameState.mistakes.includes(mistakeText)) {
+                gameState.mistakes.push(mistakeText);
+            }
+            
+            if (config.mode === 'fixed') {
+                gameState.retryQueue.push(gameState.cur);
+            }
+
+            if (config.inputType === 'keyboard') {
+                document.getElementById('keyboardArea').classList.add('invisible-layout');
+            } else {
+                document.getElementById('buttonsArea').classList.add('invisible-layout');
+            }
+            
+            document.getElementById('nextButtonArea').classList.add('active');
+            document.getElementById('btnNext').focus();
+        }
+    }
+
+    function finishGame() {
+        if (gameState.sprintInterval) {
+            clearInterval(gameState.sprintInterval);
+        }
+        
+        Sound.win();
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+        
+        showScreen('resultScreen');
+        
+        const currentConfig = config;
+        const hash = getRecordHash(currentConfig);
+        const allRecords = JSON.parse(localStorage.getItem(STORAGE_RECORDS) || '{}');
+        const previousRecord = allRecords[hash];
+        let isNewRecord = false;
+        const averageTime = (gameState.correctC ? (gameState.totalT / gameState.correctC).toFixed(1) : "0");
+        const t = translations[currentLang];
+
+        if (currentConfig.mode === 'sprint') {
+            if (!previousRecord || gameState.score > previousRecord.score) {
+                isNewRecord = true;
+                allRecords[hash] = { score: gameState.score, date: Date.now() };
+            }
+        } else if (currentConfig.mode === 'fixed') {
+            if (!previousRecord || parseFloat(averageTime) < parseFloat(previousRecord.time)) {
+                isNewRecord = true;
+                allRecords[hash] = { time: averageTime, date: Date.now() };
+            }
+        } else {
+            if (!previousRecord || gameState.count > previousRecord.score) {
+                isNewRecord = true;
+                allRecords[hash] = { score: gameState.count, date: Date.now() };
+            }
+        }
+        
+        if (isNewRecord) {
+            localStorage.setItem(STORAGE_RECORDS, JSON.stringify(allRecords));
+            document.getElementById('newRecordMsg').classList.remove('d-none');
+        } else {
+            document.getElementById('newRecordMsg').classList.add('d-none');
+        }
+
+        let titleText = "";
+        let scoreText = "";
+        
+        if (currentConfig.mode === 'sprint') {
+            titleText = t.timeAttackEnd;
+            scoreText = `${gameState.score} ${t.pts}`;
+        } else {
+            scoreText = (currentConfig.mode === 'fixed' ? `${gameState.score} / ${gameState.score}` : `${gameState.count} ${t.streak}`);
+            titleText = (currentConfig.mode === 'streak' || gameState.mistakes.length === 0) ? t.champion : t.wellDone;
+        }
+        
+        document.getElementById('resultTitle').innerText = titleText;
+        document.getElementById('scoreValue').innerText = scoreText;
+        document.getElementById('timeValue').innerText = averageTime + 's';
+        
+        const mistakesArea = document.getElementById('mistakesArea');
+        const mistakesList = document.getElementById('mistakesList');
+        
+        if (gameState.mistakes.length > 0) {
+            mistakesArea.classList.remove('d-none');
+            mistakesList.innerHTML = gameState.mistakes.map(m => `<span class="mistake-item">${m}</span>`).join('');
+        } else {
+            mistakesArea.classList.add('d-none');
+        }
+    }
+
+    function showConfig() {
+        showScreen('configScreen');
+        updateConfigUI();
+    }
+</script>
+</body>
+</html>
