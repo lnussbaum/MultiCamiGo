@@ -1054,13 +1054,25 @@
             answer = result;
             fullEquation = `${multiplier} x ${table} = ${result}`;
         } else if (format === 'missingright') {
-            questionText = `${table} x ? = ${result}`;
-            answer = multiplier;
-            fullEquation = `${table} x ${multiplier} = ${result}`;
+            if (Math.random() < 0.5) {
+                questionText = `${table} x ? = ${result}`;
+                answer = multiplier;
+                fullEquation = `${table} x ${multiplier} = ${result}`;
+            } else {
+                questionText = `${multiplier} x ? = ${result}`;
+                answer = table;
+                fullEquation = `${multiplier} x ${table} = ${result}`;
+            }
         } else if (format === 'missingleft') {
-            questionText = `? x ${multiplier} = ${result}`;
-            answer = table;
-            fullEquation = `${table} x ${multiplier} = ${result}`;
+            if (Math.random() < 0.5) {
+                questionText = `? x ${multiplier} = ${result}`;
+                answer = table;
+                fullEquation = `${table} x ${multiplier} = ${result}`;
+            } else {
+                questionText = `? x ${table} = ${result}`;
+                answer = multiplier;
+                fullEquation = `${multiplier} x ${table} = ${result}`;
+            }
         }
         
         return {
