@@ -604,7 +604,9 @@
             timeAttackEnd: "Temps écoulé ! ⚡",
             pts: "pts",
             streak: "suite",
-            targetStreak: "Objectif :"
+            targetStreak: "Objectif :",
+            alertNoTable: "Choisis au moins une table !",
+            alertNoFormat: "Choisis au moins un format !"
         },
         en: {
             subtitle: "Learn while having fun!",
@@ -650,7 +652,9 @@
             timeAttackEnd: "Time's up! ⚡",
             pts: "pts",
             streak: "streak",
-            targetStreak: "Target:"
+            targetStreak: "Target:",
+            alertNoTable: "Pick at least one table!",
+            alertNoFormat: "Pick at least one format!"
         }
     };
 
@@ -964,13 +968,13 @@
         }
         
         config = saveConfig();
+        const t = translations[currentLang];
+
         if (config.tables.length === 0) {
-            const msg = (currentLang === 'fr' ? "Choisis au moins une table !" : "Pick at least one table!");
-            return alert(msg);
+            return alert(t.alertNoTable);
         }
         if (config.formats.length === 0) {
-            const msg = (currentLang === 'fr' ? "Choisis au moins un format !" : "Pick at least one format!");
-            return alert(msg);
+            return alert(t.alertNoFormat);
         }
 
         gameState = { 
@@ -985,7 +989,7 @@
         };
         
         const badge = document.getElementById('modeBadge');
-        const t = translations[currentLang];
+        
         if (config.mode === 'fixed') {
             badge.innerText = t.modeFixed;
         } else if (config.mode === 'streak') {
