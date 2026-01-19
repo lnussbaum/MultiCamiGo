@@ -192,6 +192,24 @@
         <p class="text-muted mb-3 small" data-i18n="subtitle">Apprends en t'amusant !</p>
         
         <div class="mb-3">
+            <label class="form-label fw-bold"><i class="bi bi-calculator text-info"></i> <span data-i18n="operations">Opérations :</span></label>
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="opAdd" onchange="UI.updateConfigDisplay()">
+                    <label class="form-check-label" for="opAdd" data-i18n="opAdd">Addition (+)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="opSub" onchange="UI.updateConfigDisplay()">
+                    <label class="form-check-label" for="opSub" data-i18n="opSub">Soustraction (-)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="opMul" checked onchange="UI.updateConfigDisplay()">
+                    <label class="form-check-label" for="opMul" data-i18n="opMul">Multiplication (×)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
             <label class="form-label fw-bold"><i class="bi bi-grid-3x3-gap-fill text-primary"></i> <span data-i18n="pickTables">Choisis les tables :</span></label>
             <div class="d-flex flex-wrap justify-content-center" id="tablesContainer"></div>
             <div class="mt-1">
@@ -395,6 +413,7 @@ const Storage = {
     
     // Default Configuration
     defaults: {
+        operations: ['mul'],
         tables: [2, 3, 4, 5],
         formats: ['standard'],
         mode: 'fixed',
@@ -428,6 +447,7 @@ const Storage = {
 
     generateHash(c) {
         return JSON.stringify({
+            o: c.operations.slice().sort(),
             t: c.tables.slice().sort(),
             m: c.mode,
             v: c.mode === 'sprint' ? c.sprintDuration : c.target,
@@ -579,22 +599,51 @@ const GameLogic = {
             return this.state.retryQueue.splice(idx, 1)[0];
         }
 
+        const op = config.operations[Math.floor(Math.random() * config.operations.length)];
         const table = config.tables[Math.floor(Math.random() * config.tables.length)];
-        const mult = Math.floor(Math.random() * 10) + 1;
-        const res = table * mult;
+        const other = Math.floor(Math.random() * 10) + 1; // 1-10
         const fmt = config.formats[Math.floor(Math.random() * config.formats.length)];
 
-        let qText = "", ans = 0;
-        const full = `${table} x ${mult} = ${res}`;
+        let qText = "", ans = 0, full = "";
 
-        if (fmt === 'standard') { qText = `${table} x ${mult} = ?`; ans = res; }
-        else if (fmt === 'standardreverse') { qText = `${mult} x ${table} = ?`; ans = res; }
-        else if (fmt === 'missingright') {
-            if (Math.random() < 0.5) { qText = `${table} x ? = ${res}`; ans = mult; }
-            else { qText = `${mult} x ? = ${res}`; ans = table; }
-        } else if (fmt === 'missingleft') {
-            if (Math.random() < 0.5) { qText = `? x ${mult} = ${res}`; ans = table; }
-            else { qText = `? x ${table} = ${res}`; ans = mult; }
+        if (op === 'mul') {
+            const res = table * other;
+            full = `${table} x ${other} = ${res}`;
+            if (fmt === 'standard') { qText = `${table} x ${other} = ?`; ans = res; }
+            else if (fmt === 'standardreverse') { qText = `${other} x ${table} = ?`; ans = res; }
+            else if (fmt === 'missingright') {
+                if (Math.random() < 0.5) { qText = `${table} x ? = ${res}`; ans = other; }
+                else { qText = `${other} x ? = ${res}`; ans = table; }
+            } else if (fmt === 'missingleft') {
+                if (Math.random() < 0.5) { qText = `? x ${other} = ${res}`; ans = table; }
+                else { qText = `? x ${table} = ${res}`; ans = other; }
+            }
+        } else if (op === 'add') {
+             const res = table + other;
+             full = `${table} + ${other} = ${res}`;
+             if (fmt === 'standard') { qText = `${table} + ${other} = ?`; ans = res; }
+             else if (fmt === 'standardreverse') { qText = `${other} + ${table} = ?`; ans = res; }
+             else if (fmt === 'missingright') {
+                 if (Math.random() < 0.5) { qText = `${table} + ? = ${res}`; ans = other; }
+                 else { qText = `${other} + ? = ${res}`; ans = table; }
+             } else if (fmt === 'missingleft') {
+                 if (Math.random() < 0.5) { qText = `? + ${other} = ${res}`; ans = table; }
+                 else { qText = `? + ${table} = ${res}`; ans = other; }
+             }
+        } else if (op === 'sub') {
+            const total = table + other;
+            full = `${total} - ${table} = ${other}`;
+            
+            if (fmt === 'standard') { 
+                qText = `${total} - ${table} = ?`; ans = other; 
+            } else if (fmt === 'standardreverse') {
+                qText = `${total} - ${other} = ?`; ans = table;
+                full = `${total} - ${other} = ${table}`;
+            } else if (fmt === 'missingright') {
+                 qText = `${total} - ? = ${other}`; ans = table;
+            } else if (fmt === 'missingleft') {
+                 qText = `? - ${table} = ${other}`; ans = total;
+            }
         }
 
         return { q: qText, ans: ans, full: full };
@@ -643,7 +692,8 @@ const UI = {
             normal: "10s (Normal)", chill: "20s (Tranquille 🐢)", bravo: "Bravo !", oops: "Oups !", timesUp: "Temps écoulé !",
             finished: "Fini ! 🎊", champion: "Champion ! 🏆🥇", wellDone: "Bien joué ! 🎉", timeAttackEnd: "Temps écoulé ! ⚡",
             pts: "pts", streak: "à la suite", targetStreak: "Objectif :", alertNoTable: "Choisis au moins une table !",
-            alertNoFormat: "Choisis au moins un format !"
+            alertNoFormat: "Choisis au moins un format !", operations: "Opérations :", opAdd: "Addition (+)", opSub: "Soustraction (-)",
+            opMul: "Multiplication (×)", alertNoOp: "Choisis au moins une opération !"
         },
         en: {
             subtitle: "Learn while having fun!", pickTables: "Pick tables:", all: "All", none: "None",
@@ -656,7 +706,8 @@ const UI = {
             normal: "10s (Normal)", chill: "20s (Chill 🐢)", bravo: "Great!", oops: "Oops!", timesUp: "Time's up!",
             finished: "Finished! 🎊", champion: "Champion! 🏆🥇", wellDone: "Well done! 🎉", timeAttackEnd: "Time's up! ⚡",
             pts: "pts", streak: "streak", targetStreak: "Target:", alertNoTable: "Pick at least one table!",
-            alertNoFormat: "Pick at least one format!"
+            alertNoFormat: "Pick at least one format!", operations: "Operations:", opAdd: "Addition (+)", opSub: "Subtraction (-)",
+            opMul: "Multiplication (×)", alertNoOp: "Pick at least one operation!"
         }
     },
 
@@ -727,9 +778,12 @@ const UI = {
         const formats = ['fmtStandard', 'fmtStandardReverse', 'fmtMissingRight', 'fmtMissingLeft']
             .filter(id => document.getElementById(id).checked)
             .map(id => id.replace('fmt', '').toLowerCase());
+        const operations = ['opAdd', 'opSub', 'opMul']
+            .filter(id => document.getElementById(id).checked)
+            .map(id => id.replace('op', '').toLowerCase());
         
         return {
-            tables, formats,
+            tables, formats, operations,
             mode: document.getElementById('modeSelect').value,
             inputType: document.getElementById('inputButtons').checked ? 'buttons' : 'keyboard',
             choiceCount: parseInt(document.getElementById('choiceCountRange').value),
@@ -749,6 +803,14 @@ const UI = {
             const key = id.replace('fmt', '').toLowerCase();
             document.getElementById(id).checked = c.formats.includes(key);
         });
+        // Operations
+        if (c.operations) {
+            ['opAdd', 'opSub', 'opMul'].forEach(id => {
+                const key = id.replace('op', '').toLowerCase();
+                document.getElementById(id).checked = c.operations.includes(key);
+            });
+        }
+        
         document.getElementById('modeSelect').value = c.mode;
         document.getElementById(c.inputType === 'buttons' ? 'inputButtons' : 'inputKeyboard').checked = true;
         document.getElementById('choiceCountRange').value = c.choiceCount;
@@ -846,8 +908,20 @@ const UI = {
         area.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         area.innerHTML = '';
         
+        // Ensure buttons don't go negative if we had subtraction that yielded small numbers?
+        // But logic is "correct - offset". If correct is 2 and offset is 3, start is -1.
+        // We probably want to keep answers positive for this app context.
         const offset = Math.floor(Math.random() * count);
-        const start = Math.max(0, correct - offset);
+        let start = correct - offset;
+        if (start < 0) start = 0; // Prevent negative buttons
+        
+        // If correct is very small (e.g. 0 or 1), make sure we don't shift too far right?
+        // Actually start=0 is fine.
+        // Ensure correct is within range [start, start+count-1]
+        // If correct < start (impossible by math above)
+        // If correct >= start + count => need to shift start up? No, impossible.
+        // Wait, if correct=2, offset=3. start=-1 -> 0.
+        // Buttons: 0, 1, 2, 3. Correct (2) is in. OK.
         
         for (let i = 0; i < count; i++) {
             const val = start + i;
@@ -957,6 +1031,7 @@ const App = {
         this.config = UI.getConfigFromUI();
         const t = UI.translations[this.config.lang];
 
+        if (this.config.operations.length === 0) return alert(t.alertNoOp);
         if (this.config.tables.length === 0) return alert(t.alertNoTable);
         if (this.config.formats.length === 0) return alert(t.alertNoFormat);
 
